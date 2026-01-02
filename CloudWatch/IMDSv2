@@ -1,0 +1,161 @@
+What is IMDSv2?
+
+IMDSv2 (Instance Metadata Service v2) is a more secure version of the EC2 metadata service.
+
+Why AWS introduced IMDSv2
+
+Protects against SSRF (Server-Side Request Forgery) attacks
+
+Prevents unauthorized access to metadata
+
+Requires a session token for every metadata request
+
+👉 IMDSv1 = no auth
+👉 IMDSv2 = token-based
+
+2️⃣ How IMDSv2 works (simple flow)
+
+Instance requests a session token
+
+Metadata service returns token
+
+Token is used in metadata calls
+
+Token expires (TTL)
+
+3️⃣ Correct IMDSv2 Commands (VERY IMPORTANT)
+Step 1: Get token
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+ -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+
+Step 2: Use token to get IAM info
+curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+ http://169.254.169.254/latest/meta-data/iam/info
+
+4️⃣ What happens if IMDSv2 is enforced?
+Scenario: Instance metadata = IMDSv2 only
+
+If you try IMDSv1:
+
+curl http://169.254.169.254/latest/meta-data/iam/info
+
+
+❌ Output:
+
+401 Unauthorized
+
+
+✅ Correct fix → use token (IMDSv2)
+
+5️⃣ How IMDSv2 affects SSM Agent
+Good news 🎉
+
+Modern SSM Agent fully supports IMDSv2
+
+No manual changes required
+
+Bad news ❌
+
+SSM fails if:
+
+IAM role missing
+
+IMDS disabled
+
+Old SSM agent version
+
+6️⃣ Common SSM Failure Scenarios (Real Interview Cases)
+❌ Case 1: IAM role missing
+
+Symptom
+
+Retrieve credentials produced error: no valid credentials
+
+
+Fix
+Attach role with:
+
+AmazonSSMManagedInstanceCore
+
+❌ Case 2: IMDS disabled
+
+Symptom
+
+curl: connection timed out
+
+
+Cause
+Instance metadata set to disabled
+
+Fix
+EC2 → Instance → Actions → Modify instance metadata options
+Enable metadata access
+
+❌ Case 3: IMDSv2 enforced, agent too old
+
+Symptom
+
+Unauthorized
+
+
+Fix
+
+sudo snap refresh amazon-ssm-agent
+sudo systemctl restart snap.amazon-ssm-agent.amazon-ssm-agent
+
+❌ Case 4: Private subnet, no VPC endpoints
+
+Symptom
+
+Agent running
+
+IAM role OK
+
+Instance not online in SSM
+
+Fix
+Create VPC Interface Endpoints:
+
+com.amazonaws.<region>.ssm
+
+com.amazonaws.<region>.ec2messages
+
+com.amazonaws.<region>.ssmmessages
+
+7️⃣ Key Interview Questions & Answers
+Q1️⃣ Why does SSM need IMDS?
+
+Answer:
+
+SSM uses IMDS to retrieve temporary IAM credentials from the EC2 instance profile.
+
+Q2️⃣ Can SSM work without port 22?
+
+Answer:
+
+Yes. SSM uses HTTPS (443) and does not require SSH access.
+
+Q3️⃣ What happens if IMDS is disabled?
+
+Answer:
+
+EC2 cannot retrieve IAM credentials, so services like SSM fail authentication.
+
+Q4️⃣ Why is IMDSv2 more secure?
+
+Answer:
+
+It requires session tokens, preventing SSRF attacks from accessing instance metadata.
+
+8️⃣ One-page Troubleshooting Checklist
+
+✔ SSM Agent installed & running
+✔ IAM role attached
+✔ IMDS enabled
+✔ IMDSv2 supported
+✔ Network access to SSM endpoints
+
+9️⃣ One-line “killer” interview answer 😎
+
+SSM Agent relies on IMDS to fetch temporary IAM credentials; enforcing IMDSv2 improves security but requires updated agents and proper IAM roles.
+

@@ -1,0 +1,39 @@
+SSM Troubleshooting Checklist & Resolutions
+Issue / Symptom	Possible Cause	Quick Fix / Resolution
+Instance not showing as managed	IAM role missing	Attach role with AmazonSSMManagedInstanceCore
+	SSM Agent stopped/not installed	Install/start/restart agent (systemctl restart amazon-ssm-agent or snap equivalent)
+	IMDS disabled	Enable Instance Metadata Service (IMDS)
+	Network blocked	Add NAT Gateway or VPC endpoints for SSM
+		
+SSM Agent running but offline	No network to SSM endpoints	Check VPC NAT or VPC endpoints
+	IAM role has insufficient permissions	Attach proper IAM policies (SSM + CloudWatch)
+		
+“Insufficient permissions” error	Missing CloudWatch permissions	Attach CloudWatchAgentServerPolicy
+		
+Session Manager connection fails	User IAM policy missing ssm:StartSession	Add necessary SSM permissions to user
+	Session Manager not enabled/logged	Enable session logging
+		
+CloudWatch logs/metrics missing	CloudWatch Agent not started	Start/restart CloudWatch Agent
+	Missing CloudWatch permissions	Attach CloudWatchAgentServerPolicy
+		
+IMDSv2 “Unauthorized” or timeout	IMDSv2 enforced but old agent	Update SSM Agent
+	IMDS disabled	Enable IMDS
+		
+Run Command fails	Instance offline	Verify instance status in Systems Manager
+	IAM role missing Run Command permissions	Add necessary policies (e.g. AmazonSSMFullAccess or custom)
+	Incorrect SSM document	Use correct Run Command document
+		
+Agent removed after reboot	Agent service not enabled	Enable agent service (systemctl enable ...)
+Quick Summary to Remember
+
+Agent installed + running
+
+IAM role with AmazonSSMManagedInstanceCore + CloudWatchAgentServerPolicy attached
+
+IMDS enabled (prefer IMDSv2 support)
+
+Network allows access to SSM endpoints (NAT/VPC endpoints if private subnet)
+
+User permissions include SSM actions (for Session Manager, Run Command)
+
+Services enabled to start on boot
