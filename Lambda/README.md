@@ -1,4 +1,4 @@
-# AWS Lambda Deep Dive for Beginners
+# AWS Lambda 
 
 ## Introduction to Serverless Computing
 
