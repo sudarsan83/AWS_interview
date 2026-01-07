@@ -1,0 +1,119 @@
+1️⃣ IAM
+Q1: Why did you create a custom IAM policy instead of using only AWS managed policies?
+Answer: Custom policies allow least-privilege access, giving only necessary permissions (like EC2 start/stop) rather than full administrative access, improving security.
+Q2: What is the difference between a root user and an IAM user?
+Answer: Root user = full account access, only for billing/security setup
+IAM user = limited permissions, daily usage, can be restricted by groups/policies
+Q3: Why do we use groups in IAM instead of attaching policies to users directly?
+Answer: Groups allow scalable management. Policies applied to groups automatically apply to all users in the group, reducing errors and making management easier.
+Q4: Why is MFA important in AWS?
+Answer:MFA adds an extra security layer, preventing unauthorized access even if credentials are compromised.
+Q5: What is an interview-worthy explanation of your IAM setup?
+Answer:“I created an admin IAM user for management, a Dev-Team group with limited custom permissions, and enforced MFA. Root user is secured and never used for daily operations.”
+2️⃣ VPC
+Q1: Why did you create a custom VPC instead of using the default VPC?
+Answer:Custom VPC allows control over CIDR ranges, public/private subnets, route tables, and security — essential for production-grade networking.
+Q2: What is the difference between a public and private subnet?
+Answer:Public subnet → has route to Internet Gateway → accessible from internet
+Private subnet → no internet route → secure for backend resources like databases
+Q3: Why is an Internet Gateway needed?
+Answer:Allows communication between the VPC and the internet. Without it, public subnets cannot access the internet.
+Q4: How do you make a subnet public?
+Answer:Associate it with a route table that has 0.0.0.0/0 pointing to an Internet Gateway.
+Q5: Can a private subnet access the internet?
+Answer:Yes, only via a NAT Gateway or NAT Instance.
+3️⃣ EC2
+Q1: Why did you place EC2 in a public subnet?
+Answer:To host a web server accessible from the internet.
+Q2: Why did the website fail before adding HTTP to Security Group?
+Answer:Security Groups act as firewalls; port 80 was blocked. After opening HTTP port, the site became accessible.
+Q3: What is User Data and when does it run?
+Answer:User Data is a script executed only during the first boot of an EC2 instance. It automates server setup (installing Apache, bootstrapping, etc.).
+Q4: What happens if you stop/start an EC2 instance?
+Answer:Stop → instance is powered off; EBS preserved; public IP changes unless Elastic IP used
+Terminate → instance and optionally EBS deleted permanently
+Q5: What package difference did you notice between Amazon Linux and Ubuntu?
+Answer:Amazon Linux uses httpd for Apache, Ubuntu uses apache2. Scripts must be adapted for OS differences.
+4️⃣ S3 Static Website
+Q1: How do you host a static website in S3?
+Answer:Create bucket
+Upload HTML/CSS/JS files
+Enable static website hosting
+Configure bucket policy to allow public read
+Q2: Why are public access settings and bucket policies both important?
+Answer:Public access settings = block accidental exposure
+Bucket policy = explicitly grants access for intended use (like static website)
+Q3: Can you host a static website without making the bucket public?
+Answer:Yes, via CloudFront + Origin Access Identity (OAI). Only CloudFront accesses S3; users never access it directly.
+Q4: What file is required to host a static website?
+Answer:index.html (and optionally error.html for 404 pages)
+Q5: Why is hosting on S3 cheaper than EC2?
+Answer:No servers run 24/7. You pay only for storage and bandwidth.
+
+💡 BONUS: INTERVIEW POWER LINE FOR ALL TASKS
+“I manually set up IAM users and groups with least privilege, designed a custom VPC with public/private subnets, deployed an EC2 web server with User Data for automation, and hosted a static website on S3 with proper access controls — all reflecting production-ready architecture.”
+
+
+1️⃣ S3 (Simple Storage Service)
+Q1. How do you make an S3 bucket public for static website hosting?
+Answer:Enable static website hosting in bucket properties.
+Use Bucket Policy to allow public GetObject access.
+Enable public access settings (disable “Block Public Access”).
+Q2. Why do public access and bucket policies both matter?
+Answer:Public access settings: account-level safety check.
+Bucket policy: resource-level permissions.
+Both are required to make a bucket accessible externally.
+Q3. What happens if you delete files in S3?
+Answer:Files are removed from S3.
+Lambda functions triggered by uploads still exist.
+CloudWatch logs remain unaffected.
+Q4. Why must S3 bucket names be globally unique?
+Answer:S3 namespace is shared across all AWS accounts worldwide.
+Duplicate bucket names cause BucketAlreadyExists errors.
+2️⃣ CloudWatch (Monitoring & Alarms)
+Q1. What is Amazon CloudWatch?
+Answer:A monitoring service to collect metrics, logs, and events for AWS resources.
+Can trigger alarms based on thresholds.
+Q2. Which EC2 metrics are available by default?
+Answer:CPUUtilization, NetworkIn/Out, DiskReadOps/DiskWriteOps.
+Q3. What happens when a CloudWatch alarm triggers?
+Answer:Alarm state changes (OK → ALARM).
+Can send notifications via SNS or trigger actions like auto scaling.
+Q4. How did you test your CloudWatch alarm?
+Answer:Generated CPU load using stress tool on EC2.
+Verified state changed and email notification received.
+Q5. Difference between metrics and logs?
+Answer:Metrics: numeric performance data (CPU, network).
+Logs: text/application output for debugging and analysis.
+3️⃣ AWS CLI (Command Line Interface)
+Q1. What is AWS CLI and why use it?
+Answer:Command-line tool for managing AWS programmatically.
+Enables automation, scripting, and faster operations than console.
+Q2. What credentials are required for AWS CLI?
+Answer:Access Key ID + Secret Access Key of an IAM user.
+Region and output format (json, table, text).
+Q3. Why avoid root user access keys?
+Answer:Root has full privileges; using it is a security risk.
+IAM users/roles with least privilege are recommended.
+Q4. Why did S3 bucket creation fail?
+Answer:Bucket names are globally unique; someone else already owns that name.
+Q5. How to verify AWS CLI is configured correctly?
+Answer:Run aws s3 ls or aws ec2 describe-instances and check output.
+4️⃣ Lambda (Serverless)
+Q1. What is AWS Lambda?
+Answer:Serverless compute service, runs code in response to events.
+No server management; pay only for execution time.
+Q2. How did you trigger your Lambda function?
+Answer:Using S3 ObjectCreated event.
+Uploading a file automatically invokes Lambda.
+Q3. Where do Lambda logs go?
+Answer:Logs are sent to CloudWatch Logs automatically.
+Q4. What role does IAM play in Lambda execution?
+Answer:Lambda assumes an IAM execution role to access AWS services and write logs.
+Q5. Real-time use cases of Lambda?
+Answer:Image resizing, log processing, data transformation, CI/CD triggers.
+Q6. Does deleting S3 files remove Lambda logs?
+Answer:No, CloudWatch logs remain until retention policy expires or manual deletion.
+
+✅ Interview “Power Statement” (One-liner you can use)
+“I have hands-on experience managing S3 buckets for static websites, monitoring EC2 with CloudWatch and alarms, automating AWS tasks via CLI, and implementing event-driven Lambda functions triggered by S3 uploads, with logs monitored in CloudWatch.”
